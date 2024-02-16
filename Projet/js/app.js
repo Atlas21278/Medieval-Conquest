@@ -19,8 +19,12 @@ document.addEventListener("DOMContentLoaded", function() {
   let enemySoldiers = [];
   let gold = 0;
 
+  backgroundImage.onload = function() {
+    drawBackground();
+  };
+
   function drawBackground() {
-    ctx.drawImage(backgroundImage, -0, 0, canvas.width , canvas.height);
+    ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
   }
 
   function drawCastles() {
@@ -28,25 +32,35 @@ document.addEventListener("DOMContentLoaded", function() {
     ctx.drawImage(castleRightImage, canvas.width - castleWidth +100, canvas.height - castleHeight - 80, castleWidth, castleHeight);
   }
 
-
   function drawSoldiers() {
     // Friendly soldiers
-    friendlySoldiers.forEach((soldier, index) => {
+    friendlySoldiers.forEach(soldier => {
       ctx.fillStyle = 'blue';
-      ctx.fillRect(soldier.x +100, soldier.y + 125, soldierSize, soldierSize); // Ajouter 50 pixels à la position Y
-      soldier.x += soldierSpeed;
-      if (soldier.x > canvas.width) friendlySoldiers.splice(index, 1); // enleve soldat a la fin
+      ctx.fillRect(soldier.x + 100, soldier.y + 125, soldierSize, soldierSize);
     });
 
     // Enemy soldiers
-    enemySoldiers.forEach((soldier, index) => {
+    enemySoldiers.forEach(soldier => {
       ctx.fillStyle = 'red';
-      ctx.fillRect(soldier.x + 100, soldier.y + 125, soldierSize, soldierSize); // Ajouter 50 pixels à la position Y
-      soldier.x -= soldierSpeed;
-      if (soldier.x < 0) enemySoldiers.splice(index, 1); // enleve soldat a la fin
+      ctx.fillRect(soldier.x + 100, soldier.y + 125, soldierSize, soldierSize);
     });
   }
 
+  function updateSoldiers() {
+    friendlySoldiers.forEach((soldier, fIndex) => {
+      let collision = enemySoldiers.some(enemy => Math.abs(soldier.x - enemy.x) < 5 + soldierSize);
+      if (!collision && soldier.x < canvas.width - castleWidth - soldierSize && soldier.moving) {
+        soldier.x += soldierSpeed;
+      }
+    });
+
+    enemySoldiers.forEach((enemy, eIndex) => {
+      let collision = friendlySoldiers.some(soldier => Math.abs(enemy.x - soldier.x) < 5 + soldierSize);
+      if (!collision && enemy.x > castleWidth && enemy.moving) {
+        enemy.x -= soldierSpeed;
+      }
+    });
+  }
 
   function drawGoldCounter() {
     ctx.fillStyle = 'gold';
@@ -60,6 +74,7 @@ document.addEventListener("DOMContentLoaded", function() {
     drawCastles();
     drawSoldiers();
     drawGoldCounter();
+    updateSoldiers();
   }
 
   setInterval(updateGame, 1000 / 60);
@@ -69,20 +84,15 @@ document.addEventListener("DOMContentLoaded", function() {
   }, 1000);
 
   setInterval(() => {
-    // Envoie automatiquement des soldats ennemis
-    enemySoldiers.push({x: canvas.width - castleWidth, y: canvas.height - castleHeight - soldierSize});
-  }, 5000);
+    // Lors de l'ajout d'un soldat ennemi
+    enemySoldiers.push({ x: canvas.width - castleWidth, y: canvas.height - castleHeight - soldierSize, hp: 100, moving: true });
+  }, 10000);
 
   document.getElementById('launchButton').addEventListener('click', function() {
-    // Permet d'envoyer un soldat allié si le joueur a suffisamment d'or
+    // Lors de l'ajout d'un soldat allié
     if (gold >= 10) {
-      friendlySoldiers.push({x: 0, y: canvas.height - castleHeight - soldierSize});
+      friendlySoldiers.push({ x: 0, y: canvas.height - castleHeight - soldierSize, hp: 100, moving: true });
       gold -= 10;
     }
   });
-
-  Promise.all([backgroundImage, castleLeftImage, castleRightImage].map(img => new Promise(resolve => img.onload = resolve)))
-    .then(() => {
-      console.log("Images loaded, starting game...");
-    });
 });
