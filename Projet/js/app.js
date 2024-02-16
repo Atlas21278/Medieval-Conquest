@@ -3,16 +3,16 @@ document.addEventListener("DOMContentLoaded", function() {
   const ctx = canvas.getContext('2d');
 
   const backgroundImage = new Image();
-  backgroundImage.src = 'img/Background1.webp'; // Assurez-vous que le chemin est correct
+  backgroundImage.src = 'img/Background3.webp';
 
   const castleLeftImage = new Image();
-  castleLeftImage.src = 'img/CastleLeft.png'; // Assurez-vous que le chemin est correct
+  castleLeftImage.src = 'img/CastleLeft.png';
 
   const castleRightImage = new Image();
-  castleRightImage.src = 'img/CastleRight.png'; // Assurez-vous que le chemin est correct
+  castleRightImage.src = 'img/CastleRight.png';
 
-  const castleWidth = 150;
-  const castleHeight = 200;
+  const castleWidth = 230;
+  const castleHeight = 250;
   const soldierSize = 20;
   const soldierSpeed = 2;
   let friendlySoldiers = [];
@@ -20,31 +20,33 @@ document.addEventListener("DOMContentLoaded", function() {
   let gold = 0;
 
   function drawBackground() {
-    ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(backgroundImage, -0, 0, canvas.width , canvas.height);
   }
 
   function drawCastles() {
-    ctx.drawImage(castleLeftImage, 0, canvas.height - castleHeight, castleWidth, castleHeight);
-    ctx.drawImage(castleRightImage, canvas.width - castleWidth, canvas.height - castleHeight, castleWidth, castleHeight);
+    ctx.drawImage(castleLeftImage, -100, canvas.height - castleHeight - 80, castleWidth, castleHeight);
+    ctx.drawImage(castleRightImage, canvas.width - castleWidth +100, canvas.height - castleHeight - 80, castleWidth, castleHeight);
   }
+
 
   function drawSoldiers() {
     // Friendly soldiers
     friendlySoldiers.forEach((soldier, index) => {
       ctx.fillStyle = 'blue';
-      ctx.fillRect(soldier.x, soldier.y, soldierSize, soldierSize);
+      ctx.fillRect(soldier.x +100, soldier.y + 125, soldierSize, soldierSize); // Ajouter 50 pixels à la position Y
       soldier.x += soldierSpeed;
-      if (soldier.x > canvas.width) friendlySoldiers.splice(index, 1); // Remove soldier when it reaches the end
+      if (soldier.x > canvas.width) friendlySoldiers.splice(index, 1); // enleve soldat a la fin
     });
 
     // Enemy soldiers
     enemySoldiers.forEach((soldier, index) => {
       ctx.fillStyle = 'red';
-      ctx.fillRect(soldier.x, soldier.y, soldierSize, soldierSize);
+      ctx.fillRect(soldier.x + 100, soldier.y + 125, soldierSize, soldierSize); // Ajouter 50 pixels à la position Y
       soldier.x -= soldierSpeed;
-      if (soldier.x < 0) enemySoldiers.splice(index, 1); // Remove soldier when it reaches the start
+      if (soldier.x < 0) enemySoldiers.splice(index, 1); // enleve soldat a la fin
     });
   }
+
 
   function drawGoldCounter() {
     ctx.fillStyle = 'gold';
@@ -69,7 +71,7 @@ document.addEventListener("DOMContentLoaded", function() {
   setInterval(() => {
     // Envoie automatiquement des soldats ennemis
     enemySoldiers.push({x: canvas.width - castleWidth, y: canvas.height - castleHeight - soldierSize});
-  }, 10000);
+  }, 5000);
 
   document.getElementById('launchButton').addEventListener('click', function() {
     // Permet d'envoyer un soldat allié si le joueur a suffisamment d'or
