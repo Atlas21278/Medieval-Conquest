@@ -1,0 +1,86 @@
+document.addEventListener("DOMContentLoaded", function() {
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+
+  const backgroundImage = new Image();
+  backgroundImage.src = 'img/Background1.webp'; // Assurez-vous que le chemin est correct
+
+  const castleLeftImage = new Image();
+  castleLeftImage.src = 'img/CastleLeft.png'; // Assurez-vous que le chemin est correct
+
+  const castleRightImage = new Image();
+  castleRightImage.src = 'img/CastleRight.png'; // Assurez-vous que le chemin est correct
+
+  const castleWidth = 150;
+  const castleHeight = 200;
+  const soldierSize = 20;
+  const soldierSpeed = 2;
+  let friendlySoldiers = [];
+  let enemySoldiers = [];
+  let gold = 0;
+
+  function drawBackground() {
+    ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+  }
+
+  function drawCastles() {
+    ctx.drawImage(castleLeftImage, 0, canvas.height - castleHeight, castleWidth, castleHeight);
+    ctx.drawImage(castleRightImage, canvas.width - castleWidth, canvas.height - castleHeight, castleWidth, castleHeight);
+  }
+
+  function drawSoldiers() {
+    // Friendly soldiers
+    friendlySoldiers.forEach((soldier, index) => {
+      ctx.fillStyle = 'blue';
+      ctx.fillRect(soldier.x, soldier.y, soldierSize, soldierSize);
+      soldier.x += soldierSpeed;
+      if (soldier.x > canvas.width) friendlySoldiers.splice(index, 1); // Remove soldier when it reaches the end
+    });
+
+    // Enemy soldiers
+    enemySoldiers.forEach((soldier, index) => {
+      ctx.fillStyle = 'red';
+      ctx.fillRect(soldier.x, soldier.y, soldierSize, soldierSize);
+      soldier.x -= soldierSpeed;
+      if (soldier.x < 0) enemySoldiers.splice(index, 1); // Remove soldier when it reaches the start
+    });
+  }
+
+  function drawGoldCounter() {
+    ctx.fillStyle = 'gold';
+    ctx.font = '20px Arial';
+    ctx.fillText(`Gold: ${gold}`, 10, 30);
+  }
+
+  function updateGame() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBackground();
+    drawCastles();
+    drawSoldiers();
+    drawGoldCounter();
+  }
+
+  setInterval(updateGame, 1000 / 60);
+
+  setInterval(() => {
+    gold += 10; // Augmente le nombre de pièces d'or avec le temps
+  }, 1000);
+
+  setInterval(() => {
+    // Envoie automatiquement des soldats ennemis
+    enemySoldiers.push({x: canvas.width - castleWidth, y: canvas.height - castleHeight - soldierSize});
+  }, 10000);
+
+  document.getElementById('launchButton').addEventListener('click', function() {
+    // Permet d'envoyer un soldat allié si le joueur a suffisamment d'or
+    if (gold >= 10) {
+      friendlySoldiers.push({x: 0, y: canvas.height - castleHeight - soldierSize});
+      gold -= 10;
+    }
+  });
+
+  Promise.all([backgroundImage, castleLeftImage, castleRightImage].map(img => new Promise(resolve => img.onload = resolve)))
+    .then(() => {
+      console.log("Images loaded, starting game...");
+    });
+});
