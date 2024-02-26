@@ -15,6 +15,8 @@ document.addEventListener("DOMContentLoaded", function() {
   const castleHeight = 250;
   const soldierSize = 20;
   const soldierSpeed = 2;
+  const healthBarWidth = soldierSize;
+  const healthBarHeight = 5;
   let friendlySoldiers = [];
   let enemySoldiers = [];
   let gold = 0;
@@ -33,32 +35,45 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function drawSoldiers() {
-    // Friendly soldiers
     friendlySoldiers.forEach(soldier => {
       ctx.fillStyle = 'blue';
-      ctx.fillRect(soldier.x + 100, soldier.y + 125, soldierSize, soldierSize);
+      ctx.fillRect(soldier.x, soldier.y, soldierSize, soldierSize);
+      drawHealthBar(soldier.x, soldier.y - healthBarHeight - 5, soldier.hp, 'friendly');
     });
 
-    // Enemy soldiers
     enemySoldiers.forEach(soldier => {
       ctx.fillStyle = 'red';
-      ctx.fillRect(soldier.x + 100, soldier.y + 125, soldierSize, soldierSize);
+      ctx.fillRect(soldier.x, soldier.y, soldierSize, soldierSize);
+      drawHealthBar(soldier.x, soldier.y - healthBarHeight - 5, soldier.hp, 'enemy');
     });
   }
 
+  function drawHealthBar(x, y, hp, type) {
+    ctx.fillStyle = 'gray';
+    ctx.fillRect(x, y, healthBarWidth, healthBarHeight);
+    ctx.fillStyle = type === 'friendly' ? 'green' : 'darkred';
+    ctx.fillRect(x, y, healthBarWidth * (hp / 100), healthBarHeight);
+  }
+
   function updateSoldiers() {
-    friendlySoldiers.forEach((soldier, fIndex) => {
-      let collision = enemySoldiers.some(enemy => Math.abs(soldier.x - enemy.x) < 5 + soldierSize);
-      if (!collision && soldier.x < canvas.width - castleWidth - soldierSize && soldier.moving) {
-        soldier.x += soldierSpeed;
+    friendlySoldiers = friendlySoldiers.map(soldier => {
+      if (soldier.x < canvas.width - castleWidth - soldierSize - 5 && soldier.moving) {
+        const collision = enemySoldiers.some(enemy => Math.abs(soldier.x - enemy.x) < 5 + soldierSize);
+        if (!collision) {
+          soldier.x += soldierSpeed;
+        }
       }
+      return soldier;
     });
 
-    enemySoldiers.forEach((enemy, eIndex) => {
-      let collision = friendlySoldiers.some(soldier => Math.abs(enemy.x - soldier.x) < 5 + soldierSize);
-      if (!collision && enemy.x > castleWidth && enemy.moving) {
-        enemy.x -= soldierSpeed;
+    enemySoldiers = enemySoldiers.map(enemy => {
+      if (enemy.x > castleWidth - 200 && enemy.moving) {
+        const collision = friendlySoldiers.some(soldier => Math.abs(enemy.x - soldier.x) < 5 + soldierSize);
+        if (!collision) {
+          enemy.x -= soldierSpeed;
+        }
       }
+      return enemy;
     });
   }
 
@@ -80,18 +95,16 @@ document.addEventListener("DOMContentLoaded", function() {
   setInterval(updateGame, 1000 / 60);
 
   setInterval(() => {
-    gold += 10; // Augmente le nombre de pièces d'or avec le temps
+    gold += 10;
   }, 1000);
 
   setInterval(() => {
-    // Lors de l'ajout d'un soldat ennemi
-    enemySoldiers.push({ x: canvas.width - castleWidth, y: canvas.height - castleHeight - soldierSize, hp: 100, moving: true });
+    enemySoldiers.push({ x: canvas.width - castleWidth + 100, y: canvas.height - castleHeight - 80 + 125, hp: 100, moving: true });
   }, 10000);
 
   document.getElementById('launchButton').addEventListener('click', function() {
-    // Lors de l'ajout d'un soldat allié
     if (gold >= 10) {
-      friendlySoldiers.push({ x: 0, y: canvas.height - castleHeight - soldierSize, hp: 100, moving: true });
+      friendlySoldiers.push({ x: -100 + 100, y: canvas.height - castleHeight - 80 + 125, hp: 100, moving: true });
       gold -= 10;
     }
   });
