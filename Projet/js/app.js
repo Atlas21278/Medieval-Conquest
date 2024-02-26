@@ -13,10 +13,15 @@ document.addEventListener("DOMContentLoaded", function() {
 
   const castleWidth = 230;
   const castleHeight = 250;
-  const soldierSize = 20;
+  const soldierSize = 30;
   const soldierSpeed = 2;
   const healthBarWidth = soldierSize;
   const healthBarHeight = 5;
+  const knightImages = [];
+  const knightFrames = 5;
+  let currentFrame = 0;
+  let frameCount = 0;
+  const frameInterval = 10;
   let friendlySoldiers = [];
   let enemySoldiers = [];
   let gold = 0;
@@ -34,18 +39,31 @@ document.addEventListener("DOMContentLoaded", function() {
     ctx.drawImage(castleRightImage, canvas.width - castleWidth +100, canvas.height - castleHeight - 80, castleWidth, castleHeight);
   }
 
+  for (let i = 1; i <= knightFrames; i++) {
+    const img = new Image();
+    img.src = `soldat/knight_walk_${i}.png`;
+    knightImages.push(img);
+  }
+
   function drawSoldiers() {
     friendlySoldiers.forEach(soldier => {
-      ctx.fillStyle = 'blue';
-      ctx.fillRect(soldier.x, soldier.y, soldierSize, soldierSize);
-      drawHealthBar(soldier.x, soldier.y - healthBarHeight - 5, soldier.hp, 'friendly');
+      drawHealthBar(soldier.x, soldier.y - healthBarHeight - 5, soldier.hp, 'friendly'); // Dessiner la barre de vie légèrement au-dessus du soldat
+      ctx.drawImage(knightImages[currentFrame], soldier.x, soldier.y, soldierSize, soldierSize); // Dessiner l'image légèrement au-dessus de la barre de vie
     });
+
+
 
     enemySoldiers.forEach(soldier => {
       ctx.fillStyle = 'red';
       ctx.fillRect(soldier.x, soldier.y, soldierSize, soldierSize);
       drawHealthBar(soldier.x, soldier.y - healthBarHeight - 5, soldier.hp, 'enemy');
     });
+
+    frameCount++;
+    if (frameCount >= frameInterval) {
+      frameCount = 0;
+      currentFrame = (currentFrame + 1) % knightFrames;
+    }
   }
 
   function drawHealthBar(x, y, hp, type) {
