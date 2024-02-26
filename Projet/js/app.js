@@ -57,25 +57,34 @@ document.addEventListener("DOMContentLoaded", function() {
 
   function updateSoldiers() {
     friendlySoldiers = friendlySoldiers.map(soldier => {
-      if (soldier.x < canvas.width - castleWidth - soldierSize - 5 && soldier.moving) {
+      // Les soldats alliés doivent s'arrêter juste avant d'atteindre le château ennemi à droite
+      if (soldier.x < (canvas.width - castleWidth + 100 - soldierSize - 5) && soldier.moving) {
         const collision = enemySoldiers.some(enemy => Math.abs(soldier.x - enemy.x) < 5 + soldierSize);
         if (!collision) {
           soldier.x += soldierSpeed;
+        } else {
+          // Optionnel: Arrêter le soldat lorsqu'il rencontre un ennemi
+          soldier.moving = false;
         }
       }
       return soldier;
     });
 
     enemySoldiers = enemySoldiers.map(enemy => {
-      if (enemy.x > castleWidth - 200 && enemy.moving) {
+      // Les soldats ennemis doivent s'arrêter juste avant d'atteindre le château allié à gauche
+      if (enemy.x > (100 + soldierSize + 5) && enemy.moving) {
         const collision = friendlySoldiers.some(soldier => Math.abs(enemy.x - soldier.x) < 5 + soldierSize);
         if (!collision) {
           enemy.x -= soldierSpeed;
+        } else {
+          // Optionnel: Arrêter le soldat lorsqu'il rencontre un ennemi
+          enemy.moving = false;
         }
       }
       return enemy;
     });
   }
+
 
   function drawGoldCounter() {
     ctx.fillStyle = 'gold';
@@ -100,7 +109,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   setInterval(() => {
     enemySoldiers.push({ x: canvas.width - castleWidth + 100, y: 450, hp: 100, moving: true });
-  }, 30000);
+  }, 1000);
 
   document.getElementById('launchButton').addEventListener('click', function() {
     if (gold >= 10) {
