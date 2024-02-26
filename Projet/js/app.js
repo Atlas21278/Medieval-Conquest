@@ -99,12 +99,12 @@ document.addEventListener("DOMContentLoaded", function() {
   }, 1000);
 
   setInterval(() => {
-    enemySoldiers.push({ x: canvas.width - castleWidth + 100, y: canvas.height - castleHeight - 80 + 125, hp: 100, moving: true });
-  }, 10000);
+    enemySoldiers.push({ x: canvas.width - castleWidth + 100, y: 450, hp: 100, moving: true });
+  }, 30000);
 
   document.getElementById('launchButton').addEventListener('click', function() {
     if (gold >= 10) {
-      friendlySoldiers.push({ x: -100 + 100, y: canvas.height - castleHeight - 80 + 125, hp: 100, moving: true });
+      friendlySoldiers.push({ x: 120, y: 450, hp: 100, moving: true });
       gold -= 10;
     }
   });
