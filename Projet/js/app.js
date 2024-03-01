@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function() {
   const ctx = canvas.getContext('2d');
 
   const backgroundImage = new Image();
-  backgroundImage.src = 'img/Background3.webp';
+  backgroundImage.src = 'img/Background.png';
 
   const castleLeftImage = new Image();
   castleLeftImage.src = 'img/CastleLeft.png';
@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   const castleWidth = 230;
   const castleHeight = 250;
-  const soldierSize = 30;
+  const soldierSize = 80;
   const soldierSpeed = 2;
   const healthBarWidth = soldierSize;
   const healthBarHeight = 5;
@@ -46,10 +46,26 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function drawSoldiers() {
-    friendlySoldiers.forEach(soldier => {
-      drawHealthBar(soldier.x, soldier.y - healthBarHeight - 5, soldier.hp, 'friendly'); // Dessiner la barre de vie légèrement au-dessus du soldat
-      ctx.drawImage(knightImages[currentFrame], soldier.x, soldier.y, soldierSize, soldierSize); // Dessiner l'image légèrement au-dessus de la barre de vie
-    });
+    friendlySoldiers.forEach((soldier, index) => {
+      // Dessiner la troupe actuelle
+      drawHealthBar(soldier.x, soldier.y, soldier.hp, 'friendly');
+      ctx.drawImage(knightImages[currentFrame], soldier.x, soldier.y, soldierSize, soldierSize);
+        let tooClose = false; // Variable pour vérifier si la troupe est trop proche d'une autre troupe
+        friendlySoldiers.forEach(otherSoldier => {
+          if (soldier !== otherSoldier) {
+            const distance = Math.sqrt(Math.pow(soldier.x - otherSoldier.x, 2) + Math.pow(soldier.y - otherSoldier.y, 2));
+            if (distance < 5 + soldierSize) {
+              tooClose = true;
+            }
+          }
+        });
+
+        // Si la troupe n'est pas trop proche d'une autre troupe, alors elle peut avancer
+        if (!tooClose) {
+          // Votre logique de déplacement ici
+          soldier.x += soldierSpeed; // Par exemple, déplacement horizontal vers la droite
+        }
+      });
 
 
 

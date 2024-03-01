@@ -9,8 +9,8 @@ body, html {
 canvas {
   background-color: #ddd;
   display: block;
-  width : 100%;
-  height: 600px;
+  width : 200%;
+  height: 700px;
 }
 
 #launchButton {
