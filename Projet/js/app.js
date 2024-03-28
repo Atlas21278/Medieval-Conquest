@@ -28,17 +28,32 @@ document.addEventListener("DOMContentLoaded", function() {
   let enemySoldiers = [];
   let gold = 0;
 
+  let cameraX = 0;
+  const levelWidth = 2000;
+
   backgroundImage.onload = function() {
     drawBackground();
   };
 
   function drawBackground() {
-    ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(backgroundImage, -cameraX, 0, levelWidth, canvas.height);
   }
 
+  canvas.addEventListener('wheel', function(e) {
+    if (e.deltaX !== 0) {
+      const maxCameraX = levelWidth - canvas.width;
+      const scrollSpeed = 10; // Adjust this value as needed
+      cameraX -= e.deltaX * scrollSpeed;
+      if (cameraX < 0) cameraX = 0;
+      if (cameraX > maxCameraX) cameraX = maxCameraX;
+      e.preventDefault();
+      updateGame();
+    }
+  });
+
   function drawCastles() {
-    ctx.drawImage(castleLeftImage, -100, canvas.height - castleHeight - 80, castleWidth, castleHeight);
-    ctx.drawImage(castleRightImage, canvas.width - castleWidth +100, canvas.height - castleHeight - 80, castleWidth, castleHeight);
+    ctx.drawImage(castleLeftImage, -100 - cameraX, canvas.height - castleHeight - 80, castleWidth, castleHeight);
+    ctx.drawImage(castleRightImage, levelWidth - castleWidth + 100 - cameraX, canvas.height - castleHeight - 80, castleWidth, castleHeight);
   }
 
   for (let i = 1; i <= knightFrames; i++) {
@@ -47,111 +62,141 @@ document.addEventListener("DOMContentLoaded", function() {
     knightImages.push(img);
   }
 
-  for (let i = 1; i <= EnnemisFrames; i++) {
+  for (let i = EnnemisFrames; i > 0; i--) {
     const img = new Image();
     img.src = `Ennemis/E_${i}.png`;
     EnnemisImages.push(img);
   }
 
+
   function drawSoldiers() {
     friendlySoldiers.forEach((soldier) => {
-      // Dessiner la troupe alliée actuelle
-      drawHealthBar(soldier.x, soldier.y, soldier.hp, 'friendly');
-      ctx.drawImage(knightImages[currentFrame], soldier.x, soldier.y, soldierSize, soldierSize);
-      let tooClose = false; // Variable pour vérifier si la troupe est trop proche d'une autre troupe
-      friendlySoldiers.forEach(otherSoldier => {
-        if (soldier !== otherSoldier) {
-          const alignedVertically = Math.abs(otherSoldier.y - soldier.y) < soldierSize / 2;
-          const closeHorizontally = Math.abs(otherSoldier.x - soldier.x) < 5 + soldierSize;
-          if (alignedVertically && closeHorizontally) {
-            tooClose = true;
-          }
-        }
-      });
-      // Si la troupe n'est pas trop proche d'une autre troupe, alors elle peut avancer
-      if (!tooClose && soldier.moving) {
-        soldier.x += soldierSpeed; // Par exemple, déplacement horizontal vers la droite
-      }
+      drawHealthBar(soldier.x - cameraX, soldier.y, soldier.hp, 'friendly');
+      ctx.drawImage(knightImages[soldier.currentFrame], soldier.x - cameraX, soldier.y, soldierSize +30, soldierSize +30);
     });
 
-    enemySoldiers.forEach(enemy => {
-      // Dessiner la troupe ennemie actuelle
-      drawHealthBar(enemy.x, enemy.y, enemy.hp, 'enemy');
-      ctx.drawImage(EnnemisImages[currentFrame], enemy.x, enemy.y, soldierSize, soldierSize);
-      let tooClose = false; // Variable pour vérifier si la troupe ennemie est trop proche d'une autre troupe ennemie
-      enemySoldiers.forEach(otherEnemy => {
-        if (enemy !== otherEnemy) {
-          const alignedVertically = Math.abs(otherEnemy.y - enemy.y) < soldierSize / 2;
-          const closeHorizontally = Math.abs(otherEnemy.x - enemy.x) < 5 + soldierSize;
-          if (alignedVertically && closeHorizontally) {
-            tooClose = true; // Si une troupe ennemie est trop proche, définir tooClose sur true
-          }
-        }
-      });
-      // Si la troupe ennemie n'est pas trop proche d'une autre troupe ennemie, alors elle peut avancer
-      if (!tooClose && enemy.moving) {
-        enemy.x -= soldierSpeed; // Par exemple, déplacement horizontal vers la gauche
-      }
+    enemySoldiers.forEach((enemy) => {
+      drawHealthBar(enemy.x - cameraX, enemy.y, enemy.hp, 'enemy');
+      ctx.drawImage(EnnemisImages[enemy.currentFrame], enemy.x - cameraX, enemy.y, soldierSize, soldierSize);
     });
-
-    frameCount++;
-    if (frameCount >= frameInterval) {
-      frameCount = 0;
-      currentFrame = (currentFrame + 1) % knightFrames;
-    }
   }
 
   function drawHealthBar(x, y, hp, type) {
     ctx.fillStyle = 'gray';
     ctx.fillRect(x, y, healthBarWidth, healthBarHeight);
-    ctx.fillStyle = type === 'friendly' ? 'green' : 'darkred';
+    ctx.fillStyle = type === 'friendly' ? 'green' : 'red';
     ctx.fillRect(x, y, healthBarWidth * (hp / 100), healthBarHeight);
   }
 
   function updateSoldiers() {
-    friendlySoldiers = friendlySoldiers.map(soldier => {
-      if (soldier.x < (canvas.width - castleWidth + 100 - soldierSize - 5) && soldier.moving) {
-        const collision = enemySoldiers.some(enemy => Math.abs(soldier.x - enemy.x) < 5 + soldierSize);
-        const tooClose = friendlySoldiers.some(otherSoldier => soldier !== otherSoldier && Math.abs(soldier.x - otherSoldier.x) < 5 + soldierSize);
-        if (!collision && !tooClose) {
-          soldier.x += soldierSpeed;
-        } else {
-          // Arrêter le soldat lorsqu'il rencontre un ennemi ou un allié
-          soldier.moving = false;
+    frameCount++; // Incrémenter le compteur de frames à chaque rafraîchissement
+
+    friendlySoldiers.forEach((soldier) => {
+      if (soldier.moving) {
+        soldier.x += soldierSpeed;
+        if (frameCount % 5 === 0) {
+          soldier.currentFrame = (soldier.currentFrame + 1) % knightFrames;
         }
       }
-      return soldier;
+      // Limiter le mouvement des troupes amies une fois qu'elles sont au-delà du château ennemi
+      if (soldier.x + soldierSize >= levelWidth - castleWidth + 100) {
+        soldier.x = levelWidth - castleWidth + 100 - soldierSize;
+      }
     });
 
-    enemySoldiers = enemySoldiers.map(enemy => {
-      if (enemy.x > (100 + soldierSize + 5) && enemy.moving) {
-        const collision = friendlySoldiers.some(soldier => Math.abs(enemy.x - soldier.x) < 5 + soldierSize);
-        const tooClose = enemySoldiers.some(otherEnemy => enemy !== otherEnemy && Math.abs(enemy.x - otherEnemy.x) < 5 + soldierSize);
-        if (!collision && !tooClose) {
-          enemy.x -= soldierSpeed;
-        } else {
-          // Arrêter le soldat lorsqu'il rencontre un allié ou un ennemi
-          enemy.moving = false;
+    enemySoldiers.forEach((enemy) => {
+      if (enemy.moving) {
+        enemy.x -= soldierSpeed;
+        if (frameCount % 5 === 0) {
+          enemy.currentFrame = (enemy.currentFrame + 1) % EnnemisFrames;
         }
       }
-      return enemy;
+      // Limiter le mouvement des troupes ennemies une fois qu'elles sont au-delà du château ami
+      if (enemy.x <= castleWidth - 100) {
+        enemy.x = castleWidth - 100;
+      }
+    });
+
+  }
+
+
+  function engageCombat(ally, enemy) {
+    const attackInterval = 1000; // Interval de temps entre chaque attaque en millisecondes
+
+    ally.inCombat = true; // Définir le soldat allié en combat
+
+    let attackTimer = setInterval(() => {
+      // Réduire les points de vie de l'ennemi
+      enemy.hp -= 10; // Réduire de 10 points de vie à chaque attaque, ajustez selon vos besoins
+
+      // Vérifier si l'ennemi est éliminé
+      if (enemy.hp <= 0) {
+        clearInterval(attackTimer); // Arrêter l'attaque
+        // Supprimer l'ennemi du tableau des ennemis
+        const index = enemySoldiers.indexOf(enemy);
+        if (index !== -1) {
+          enemySoldiers.splice(index, 1);
+        }
+        // Reprendre le mouvement après la fin du combat
+        ally.moving = true;
+        ally.inCombat = false; // Le soldat allié n'est plus en combat
+      }
+
+      // Réduire les points de vie de l'allié
+      ally.hp -= 5; // Réduire de 5 points de vie à chaque attaque, ajustez selon vos besoins
+
+      // Vérifier si l'allié est éliminé
+      if (ally.hp <= 0) {
+        clearInterval(attackTimer); // Arrêter l'attaque
+        // Supprimer l'allié du tableau des alliés
+        const index = friendlySoldiers.indexOf(ally);
+        if (index !== -1) {
+          friendlySoldiers.splice(index, 1);
+        }
+        ally.inCombat = false; // Le soldat allié n'est plus en combat
+      }
+    }, attackInterval);
+  }
+
+  function checkCollisions() {
+    friendlySoldiers.forEach((friendlySoldier) => {
+      if (!friendlySoldier.inCombat) { // Vérifier si le soldat allié n'est pas déjà en combat
+        enemySoldiers.forEach((enemySoldier) => {
+          if (!enemySoldier.inCombat) { // Vérifier si le soldat ennemi n'est pas déjà en combat
+            if (checkCollision(friendlySoldier, enemySoldier)) {
+              // Arrêter le mouvement des soldats lorsqu'ils entrent en collision
+              friendlySoldier.moving = false;
+              enemySoldier.moving = false;
+              // Engager le combat entre les deux soldats
+              engageCombat(friendlySoldier, enemySoldier);
+            }
+          }
+        });
+      }
     });
   }
 
 
-  function drawGoldCounter() {
-    const goldCounter = document.getElementById('goldCounter');
-    goldCounter.innerText = `Gold: ${gold}`;
+  function checkCollision(obj1, obj2) {
+    return obj1.x < obj2.x + soldierSize &&
+      obj1.x + soldierSize > obj2.x &&
+      obj1.y < obj2.y + soldierSize &&
+      obj1.y + soldierSize > obj2.y;
   }
-
 
   function updateGame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawBackground();
     drawCastles();
     drawSoldiers();
-    drawGoldCounter();
     updateSoldiers();
+    updateGoldCounter();
+    checkCollisions();
+  }
+
+  function updateGoldCounter() {
+    const goldCounter = document.getElementById('goldCounter');
+    goldCounter.textContent = 'Gold: ' + gold;
   }
 
   setInterval(updateGame, 1000 / 60);
@@ -161,12 +206,12 @@ document.addEventListener("DOMContentLoaded", function() {
   }, 1000);
 
   setInterval(() => {
-    enemySoldiers.push({ x: canvas.width - castleWidth + 100, y: 450, hp: 100, moving: true });
-  }, 1000);
+    enemySoldiers.push({ x: levelWidth - castleWidth + 100, y: 450, hp: 100, moving: true, currentFrame: 0, inCombat: false });
+  }, 3000);
 
   document.getElementById('launchButton').addEventListener('click', function() {
     if (gold >= 10) {
-      friendlySoldiers.push({ x: 120, y: 450, hp: 100, moving: true });
+      friendlySoldiers.push({ x: 120, y: 450, hp: 100, moving: true, currentFrame: 0, inCombat: false });
       gold -= 10;
     }
   });
