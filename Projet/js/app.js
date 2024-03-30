@@ -68,11 +68,10 @@ document.addEventListener("DOMContentLoaded", function() {
     EnnemisImages.push(img);
   }
 
-
   function drawSoldiers() {
     friendlySoldiers.forEach((soldier) => {
       drawHealthBar(soldier.x - cameraX, soldier.y, soldier.hp, 'friendly');
-      ctx.drawImage(knightImages[soldier.currentFrame], soldier.x - cameraX, soldier.y, soldierSize +30, soldierSize +30);
+      ctx.drawImage(knightImages[soldier.currentFrame], soldier.x - cameraX, soldier.y, soldierSize + 30, soldierSize + 30);
     });
 
     enemySoldiers.forEach((enemy) => {
@@ -121,60 +120,71 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
   function engageCombat(ally, enemy) {
-    const attackInterval = 1000; // Interval de temps entre chaque attaque en millisecondes
+    const attackInterval = 500; // Intervalle de temps entre chaque attaque en millisecondes
 
-    ally.inCombat = true; // Définir le soldat allié en combat
+    // Définir les troupes en combat
+    ally.inCombat = true;
+    enemy.inCombat = true;
 
-    let attackTimer = setInterval(() => {
+    let allyAttackTimer = setInterval(() => {
       // Réduire les points de vie de l'ennemi
-      enemy.hp -= 10; // Réduire de 10 points de vie à chaque attaque, ajustez selon vos besoins
+      enemy.hp -= 20;
 
       // Vérifier si l'ennemi est éliminé
-      if (enemy.hp <= 0) {
-        clearInterval(attackTimer); // Arrêter l'attaque
+      if (enemy.hp <= 0 || ally.hp <= 0) {
+        clearInterval(allyAttackTimer);
+        clearInterval(enemyAttackTimer);
         // Supprimer l'ennemi du tableau des ennemis
         const index = enemySoldiers.indexOf(enemy);
         if (index !== -1) {
           enemySoldiers.splice(index, 1);
         }
         // Reprendre le mouvement après la fin du combat
+        ally.inCombat = false;
         ally.moving = true;
-        ally.inCombat = false; // Le soldat allié n'est plus en combat
       }
+    }, attackInterval);
 
-      // Réduire les points de vie de l'allié
-      ally.hp -= 5; // Réduire de 5 points de vie à chaque attaque, ajustez selon vos besoins
+    let enemyAttackTimer = setInterval(() => {
+      ally.hp -= 10;
 
       // Vérifier si l'allié est éliminé
       if (ally.hp <= 0) {
-        clearInterval(attackTimer); // Arrêter l'attaque
+        clearInterval(allyAttackTimer);
+        clearInterval(enemyAttackTimer);
         // Supprimer l'allié du tableau des alliés
         const index = friendlySoldiers.indexOf(ally);
         if (index !== -1) {
           friendlySoldiers.splice(index, 1);
         }
-        ally.inCombat = false; // Le soldat allié n'est plus en combat
+        enemy.inCombat = false;
+        enemy.moving = true; // La troupe ennemie peut également reprendre son mouvement
       }
     }, attackInterval);
   }
 
+
+
   function checkCollisions() {
     friendlySoldiers.forEach((friendlySoldier) => {
-      if (!friendlySoldier.inCombat) { // Vérifier si le soldat allié n'est pas déjà en combat
-        enemySoldiers.forEach((enemySoldier) => {
-          if (!enemySoldier.inCombat) { // Vérifier si le soldat ennemi n'est pas déjà en combat
-            if (checkCollision(friendlySoldier, enemySoldier)) {
-              // Arrêter le mouvement des soldats lorsqu'ils entrent en collision
-              friendlySoldier.moving = false;
-              enemySoldier.moving = false;
-              // Engager le combat entre les deux soldats
-              engageCombat(friendlySoldier, enemySoldier);
-            }
+      enemySoldiers.forEach((enemySoldier) => {
+        // Vérifier si le soldat allié est en collision avec l'ennemi
+        if (checkCollision(friendlySoldier, enemySoldier)) {
+          // Arrêter le mouvement des soldats
+          friendlySoldier.moving = false;
+          enemySoldier.moving = false;
+          // Si aucun des soldats n'est déjà en combat, engager le combat
+          if (!friendlySoldier.inCombat && !enemySoldier.inCombat) {
+            engageCombat(friendlySoldier, enemySoldier);
+            // Définir les soldats en combat
+            friendlySoldier.inCombat = true;
+            enemySoldier.inCombat = true;
           }
-        });
-      }
+        }
+      });
     });
   }
+
 
 
   function checkCollision(obj1, obj2) {
