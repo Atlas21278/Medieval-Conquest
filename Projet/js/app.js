@@ -21,6 +21,8 @@ document.addEventListener("DOMContentLoaded", function() {
   const EnnemisImages = [];
   const knightFrames = 5;
   const EnnemisFrames = 6;
+  const allyAttackImages = [];
+  const allyAttackFrames = 8;
   let currentFrame = 0;
   let frameCount = 0;
   const frameInterval = 10;
@@ -58,20 +60,30 @@ document.addEventListener("DOMContentLoaded", function() {
 
   for (let i = 1; i <= knightFrames; i++) {
     const img = new Image();
-    img.src = `soldat/knight_walk_${i}.png`;
+    img.src = `img/soldat/knight_walk_${i}.png`;
     knightImages.push(img);
   }
 
   for (let i = EnnemisFrames; i > 0; i--) {
     const img = new Image();
-    img.src = `Ennemis/E_${i}.png`;
+    img.src = `img/Ennemis/E_${i}.png`;
     EnnemisImages.push(img);
+  }
+
+  for (let i = 1; i <= allyAttackFrames; i++) {
+    const img = new Image();
+    img.src = `img/attack/knight_attack_${i}.png`;
+    allyAttackImages.push(img);
   }
 
   function drawSoldiers() {
     friendlySoldiers.forEach((soldier) => {
       drawHealthBar(soldier.x - cameraX, soldier.y, soldier.hp, 'friendly');
-      ctx.drawImage(knightImages[soldier.currentFrame], soldier.x - cameraX, soldier.y, soldierSize + 30, soldierSize + 30);
+      if (soldier.inCombat) {
+        ctx.drawImage(allyAttackImages[soldier.attackFrame], soldier.x - cameraX, soldier.y, soldierSize + 30, soldierSize + 30);
+      } else {
+        ctx.drawImage(knightImages[soldier.currentFrame], soldier.x - cameraX, soldier.y, soldierSize + 30, soldierSize + 30);
+      }
     });
 
     enemySoldiers.forEach((enemy) => {
@@ -120,16 +132,15 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
   function engageCombat(ally, enemy) {
-    const attackInterval = 500; // Intervalle de temps entre chaque attaque en millisecondes
+    const attackInterval = 100; // Intervalle de temps entre chaque attaque en millisecondes
 
     // Définir les troupes en combat
     ally.inCombat = true;
     enemy.inCombat = true;
 
-    let allyAttackTimer = setInterval(() => {
-      // Réduire les points de vie de l'ennemi
-      enemy.hp -= 20;
+    let allyAttackFrame = 0; // Frame actuelle de l'attaque de l'allié
 
+    let allyAttackTimer = setInterval(() => {
       // Vérifier si l'ennemi est éliminé
       if (enemy.hp <= 0 || ally.hp <= 0) {
         clearInterval(allyAttackTimer);
@@ -143,6 +154,10 @@ document.addEventListener("DOMContentLoaded", function() {
         ally.inCombat = false;
         ally.moving = true;
       }
+
+      // Afficher la frame d'attaque de l'allié
+      ally.attackFrame = allyAttackFrame;
+      allyAttackFrame = (allyAttackFrame + 1) % allyAttackFrames; // Passer à la prochaine frame
     }, attackInterval);
 
     let enemyAttackTimer = setInterval(() => {
@@ -163,8 +178,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }, attackInterval);
   }
 
-
-
   function checkCollisions() {
     friendlySoldiers.forEach((friendlySoldier) => {
       enemySoldiers.forEach((enemySoldier) => {
@@ -184,8 +197,6 @@ document.addEventListener("DOMContentLoaded", function() {
       });
     });
   }
-
-
 
   function checkCollision(obj1, obj2) {
     return obj1.x < obj2.x + soldierSize &&
