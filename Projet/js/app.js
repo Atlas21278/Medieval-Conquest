@@ -170,7 +170,7 @@ document.addEventListener("DOMContentLoaded", function() {
       }
       // Attaque du château ennemi lorsque les troupes amies atteignent le château ennemi
       if (soldier.x + soldierSize >= levelWidth - castleWidth + 100) {
-        rightCastleHP -= 5; // Réduire la santé du château de droite
+        rightCastleHP -= 11; // Réduire la santé du château de droite
         soldier.x = levelWidth - castleWidth + 100 - soldierSize;
       }
     });
@@ -186,7 +186,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
       // Attaque du château lorsque les troupes ennemies atteignent le château
       if (enemy.x <= castleWidth - 100 && castleDamageTimer === null) {
-        const castleDamageRate = 0.1; // Taux de dommages par intervalle de temps
+        const castleDamageRate = 3; // Taux de dommages par intervalle de temps
         const castleDamageInterval = 1000; // Intervalle de temps entre chaque réduction de santé du château (en millisecondes)
 
         // Utiliser setInterval pour réduire progressivement la santé du château
@@ -213,7 +213,7 @@ document.addEventListener("DOMContentLoaded", function() {
     // Vérifier si le jeu est terminé (victoire/défaite)
     if (leftCastleHP <= 0) {
       // Afficher une fenêtre de défaite pour le château de gauche
-      const playAgain = confirm("Défaite : Le château de gauche a été détruit ! Voulez-vous rejouer ?");
+      const playAgain = confirm("Défaite : votre a été détruit... Voulez-vous rejouer ?");
       if (playAgain) {
         resetGame();
       } else {
@@ -221,7 +221,7 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     } else if (rightCastleHP <= 0) {
       // Afficher une fenêtre de victoire pour le château de droite
-      const playAgain = confirm("Victoire : Le château de droite a survécu ! Voulez-vous rejouer ?");
+      const playAgain = confirm("Victoire : Le château ennemi à été détruit ! Voulez-vous rejouer ?");
       if (playAgain) {
         resetGame();
       } else {
@@ -238,38 +238,31 @@ document.addEventListener("DOMContentLoaded", function() {
     enemy.inCombat = true;
 
     let allyAttackFrame = 0; // Frame actuelle de l'attaque de l'allié
+    let enemyAttackFrame = 0; // Frame actuelle de l'attaque de l'ennemi
 
     let allyAttackTimer = setInterval(() => {
-      enemy.hp -= 2;
-      // Vérifier si l'ennemi est éliminé
-      if (enemy.hp <= 0 || ally.hp <= 0) {
+      if (enemy.hp > 0) {
+        enemy.hp -= 2;
+      } else {
         clearInterval(allyAttackTimer);
         clearInterval(enemyAttackTimer);
-        // Supprimer l'ennemi du tableau des ennemis
         const index = enemySoldiers.indexOf(enemy);
         if (index !== -1) {
           enemySoldiers.splice(index, 1);
         }
-        // Reprendre le mouvement après la fin du combat
         ally.inCombat = false;
         ally.moving = true;
       }
-
-      // Afficher la frame d'attaque de l'allié
       ally.attackFrame = allyAttackFrame;
       allyAttackFrame = (allyAttackFrame + 1) % allyAttackFrames; // Passer à la prochaine frame
     }, attackInterval);
 
-    let enemyAttackFrame = 0; // Frame actuelle de l'attaque de l'ennemi
-
     let enemyAttackTimer = setInterval(() => {
-      ally.hp -= 2;
-
-      // Vérifier si l'allié est éliminé
-      if (ally.hp <= 0) {
+      if (ally.hp > 0) {
+        ally.hp -= 2;
+      } else {
         clearInterval(allyAttackTimer);
         clearInterval(enemyAttackTimer);
-        // Supprimer l'allié du tableau des alliés
         const index = friendlySoldiers.indexOf(ally);
         if (index !== -1) {
           friendlySoldiers.splice(index, 1);
@@ -277,13 +270,14 @@ document.addEventListener("DOMContentLoaded", function() {
         enemy.inCombat = false;
         enemy.moving = true; // La troupe ennemie peut également reprendre son mouvement
       }
-      // Afficher la frame d'attaque de l'ennemi
       enemy.attackFrame = enemyAttackFrame;
       enemyAttackFrame = (enemyAttackFrame + 1) % EnnemisAttackFrames; // Passer à la prochaine frame
     }, attackInterval);
+
     ally.moving = true;
     enemy.moving = true;
   }
+
 
   function checkCollisions() {
     friendlySoldiers.forEach((friendlySoldier) => {
@@ -294,12 +288,10 @@ document.addEventListener("DOMContentLoaded", function() {
           // Arrêter le mouvement des soldats
           friendlySoldier.moving = false;
           enemySoldier.moving = false;
-          // Si aucun des soldats n'est déjà en combat, engager le combat
-          if (!friendlySoldier.inCombat && !enemySoldier.inCombat) {
+
+          // Si l'ennemi n'est pas en combat, démarrer le combat
+          if (!enemySoldier.inCombat) {
             engageCombat(friendlySoldier, enemySoldier);
-            // Définir les soldats en combat
-            friendlySoldier.inCombat = true;
-            enemySoldier.inCombat = true;
           }
           hasEnemy = true;
         }
@@ -308,10 +300,34 @@ document.addEventListener("DOMContentLoaded", function() {
       // Si aucun ennemi n'est détecté devant le soldat, reprendre le mouvement
       if (!hasEnemy) {
         friendlySoldier.moving = true;
-        friendlySoldier.inCombat = false;
+      }
+    });
+
+    enemySoldiers.forEach((enemySoldier) => {
+      let hasAlly = false; // Variable pour vérifier si un allié est devant l'ennemi
+      friendlySoldiers.forEach((friendlySoldier) => {
+        // Vérifier si l'ennemi est en collision avec le soldat allié
+        if (checkCollision(enemySoldier, friendlySoldier)) {
+          // Arrêter le mouvement des soldats
+          enemySoldier.moving = false;
+          friendlySoldier.moving = false;
+
+          // Si l'allié n'est pas en combat, démarrer le combat
+          if (!friendlySoldier.inCombat) {
+            engageCombat(enemySoldier, friendlySoldier);
+          }
+          hasAlly = true;
+        }
+      });
+
+      // Si aucun allié n'est détecté devant l'ennemi, reprendre le mouvement
+      if (!hasAlly) {
+        enemySoldier.moving = true;
       }
     });
   }
+
+
 
 
   function checkCollision(obj1, obj2) {
@@ -406,7 +422,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // Ajout d'un intervalle pour générer de l'or automatiquement
   setInterval(() => {
-    gold += 5;
+    gold += 3;
   }, 1000);
 
   // Démarrer le jeu
