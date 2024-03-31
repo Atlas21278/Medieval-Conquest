@@ -93,6 +93,12 @@ level VARCHAR(50) NOT NULL
         Type de données : Chaîne de caractères
         Explication : Cette colone enregistre le niveau de difficulté choisi.
 
+### Pour Jouer :
+
+  Après avoir lancer le jeu et vous êtes connecté, vous pouvez lancer vos troupes à l'aide du bouton dédié, vous pouvez consulter votre or restant en haut à gauche de l'écran et consulter les différentes barres de vie des chateaux et des différents soldats déployer.
+  /!\ Pour déplacer le point de vue utilisez les flèches de votre clavier.
+  Laissez vous emportez par la musique de fond (hi6rn) et bon jeu ! :)
+
 ### Date :
 
     31 mars 2024
