@@ -28,6 +28,7 @@ document.addEventListener("DOMContentLoaded", function() {
   const castleHealth = 500; // Points de vie initiaux des châteaux
   let leftCastleHP = castleHealth;
   let rightCastleHP = castleHealth;
+  let castleDamageTimer = null;
   let frameCount = 0;
   let gameInterval;
   let friendlySoldiers = [];
@@ -57,27 +58,42 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  function drawCastles() {
-    // Dessiner les châteaux
-    ctx.drawImage(castleLeftImage, -100 - cameraX, canvas.height - castleHeight - 80, castleWidth, castleHeight);
-    ctx.drawImage(castleRightImage, levelWidth - castleWidth + 100 - cameraX, canvas.height - castleHeight - 80, castleWidth, castleHeight);
+    function drawCastles() {
+      // Dessiner les châteaux
+      ctx.drawImage(castleLeftImage, -100 - cameraX, canvas.height - castleHeight - 80, castleWidth, castleHeight);
+      ctx.drawImage(castleRightImage, levelWidth - castleWidth + 100 - cameraX, canvas.height - castleHeight - 80, castleWidth, castleHeight);
 
-    // Dessiner les barres de vie des châteaux
-    const leftCastleHealthBarWidth = castleWidth * (leftCastleHP / castleHealth);
-    const rightCastleHealthBarWidth = castleWidth * (rightCastleHP / castleHealth);
+      // Dessiner les barres de vie des châteaux
+      const leftCastleHealthBarWidth = castleWidth * (leftCastleHP / castleHealth);
+      const rightCastleHealthBarWidth = castleWidth * (rightCastleHP / castleHealth);
 
-    // Barre de vie du château de gauche
-    ctx.fillStyle = 'gray';
-    ctx.fillRect(-100 - cameraX, canvas.height - castleHeight - 100, castleWidth, 10);
-    ctx.fillStyle = 'green';
-    ctx.fillRect(-100 - cameraX, canvas.height - castleHeight - 100, leftCastleHealthBarWidth, 10);
+      // Barre de vie du château de gauche
+      const leftCastleBarXOffset = 105; // Décalage vers l'intérieur du château
+      const leftCastleBarY = canvas.height - castleHeight - 100;
+      const leftCastleBarHeight = 10;
+      const leftCastleBarWidth = castleWidth;
+      const leftCastleBarBorderWidth = 1; // Largeur de la bordure noire
 
-    // Barre de vie du château de droite
-    ctx.fillStyle = 'gray';
-    ctx.fillRect(levelWidth - castleWidth + 100 - cameraX, canvas.height - castleHeight - 100, castleWidth, 10);
-    ctx.fillStyle = 'red';
-    ctx.fillRect(levelWidth - castleWidth + 100 - cameraX, canvas.height - castleHeight - 100, rightCastleHealthBarWidth, 10);
-  }
+// Dessiner la bordure noire
+      ctx.fillStyle = 'black';
+      ctx.fillRect(-100 - cameraX + leftCastleBarXOffset - leftCastleBarBorderWidth, leftCastleBarY - leftCastleBarBorderWidth, leftCastleBarWidth + 2 * leftCastleBarBorderWidth, leftCastleBarHeight + 2 * leftCastleBarBorderWidth);
+
+// Dessiner la barre de vie verte
+      ctx.fillStyle = 'gray'; // Couleur de fond grise
+      ctx.fillRect(-100 - cameraX + leftCastleBarXOffset, leftCastleBarY, leftCastleBarWidth, leftCastleBarHeight);
+      ctx.fillStyle = 'green'; // Couleur verte pour la barre de vie
+      ctx.fillRect(-100 - cameraX + leftCastleBarXOffset, leftCastleBarY, leftCastleHealthBarWidth, leftCastleBarHeight);
+
+      // Barre de vie du château de droite
+      const rightCastleBarX = levelWidth - castleWidth + 100 - cameraX;
+      const rightCastleBarVisibleWidth = Math.min(rightCastleHealthBarWidth, castleWidth); // Assure que la barre reste dans les limites du château
+      const rightCastleBarXOffset = -105; // Décalage vers l'intérieur du château
+      ctx.fillStyle = 'gray';
+      ctx.fillRect(rightCastleBarX + rightCastleBarXOffset, canvas.height - castleHeight - 100, castleWidth, 10);
+      ctx.fillStyle = 'red';
+      ctx.fillRect(rightCastleBarX + rightCastleBarXOffset, canvas.height - castleHeight - 100, rightCastleBarVisibleWidth, 10);
+    }
+
 
   for (let i = 1; i <= knightFrames; i++) {
     const img = new Image();
@@ -164,7 +180,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const castleDamageInterval = 1000; // Intervalle de temps entre chaque réduction de santé du château (en millisecondes)
 
         // Utiliser setInterval pour réduire progressivement la santé du château
-        const castleDamageTimer = setInterval(() => {
+        castleDamageTimer = setInterval(() => {
           leftCastleHP -= castleDamageRate;
 
           // Vérifier si le château est détruit
@@ -326,6 +342,11 @@ document.addEventListener("DOMContentLoaded", function() {
     gold = 0;
     frameCount = 0;
     clearInterval(gameInterval);
+    if (castleDamageTimer !== null) {
+      clearInterval(castleDamageTimer);
+    }
+    castleDamageTimer = null;
     gameInterval = setInterval(updateGame, 1000 / 60);
   }
+
 });
