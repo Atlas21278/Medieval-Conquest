@@ -1,3 +1,6 @@
+// Démarrer la musique de fond
+var backgroundMusic = document.getElementById('backgroundMusic');
+backgroundMusic.play().catch(e => console.log('Erreur de lecture de la musique : ', e));
 document.getElementById('gameForm').addEventListener('submit', function(event) {
   const username = document.querySelector('input[name="username"]').value;
   const password = document.querySelector('input[name="password"]').value;
@@ -7,7 +10,6 @@ document.getElementById('gameForm').addEventListener('submit', function(event) {
   if (!/(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,}/.test(password)) {
     errorMessages.push("Le mot de passe ne respecte pas les critères requis.");
   }
-
   // Ajouter plus de validations si nécessaire
 
   if (errorMessages.length > 0) {
