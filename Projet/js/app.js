@@ -23,6 +23,8 @@ document.addEventListener("DOMContentLoaded", function() {
   const EnnemisFrames = 6;
   const allyAttackImages = [];
   const allyAttackFrames = 8;
+  const EnnemisAttackFrames = 5;
+  const EnnemisAttackImages = [];
   const castleHealth = 500; // Points de vie initiaux des châteaux
   let leftCastleHP = castleHealth;
   let rightCastleHP = castleHealth;
@@ -73,7 +75,7 @@ document.addEventListener("DOMContentLoaded", function() {
     // Barre de vie du château de droite
     ctx.fillStyle = 'gray';
     ctx.fillRect(levelWidth - castleWidth + 100 - cameraX, canvas.height - castleHeight - 100, castleWidth, 10);
-    ctx.fillStyle = 'green';
+    ctx.fillStyle = 'red';
     ctx.fillRect(levelWidth - castleWidth + 100 - cameraX, canvas.height - castleHeight - 100, rightCastleHealthBarWidth, 10);
   }
 
@@ -95,6 +97,14 @@ document.addEventListener("DOMContentLoaded", function() {
     allyAttackImages.push(img);
   }
 
+  for (let i = EnnemisAttackFrames; i > 0; i--) {
+    const img = new Image();
+    img.src = `img/wbg/Attack_E_${i}.png`;
+    EnnemisAttackImages.push(img);
+  }
+
+
+
   function drawSoldiers() {
     friendlySoldiers.forEach((soldier) => {
       drawHealthBar(soldier.x - cameraX, soldier.y, soldier.hp, 'friendly');
@@ -107,7 +117,11 @@ document.addEventListener("DOMContentLoaded", function() {
 
     enemySoldiers.forEach((enemy) => {
       drawHealthBar(enemy.x - cameraX, enemy.y, enemy.hp, 'enemy');
-      ctx.drawImage(EnnemisImages[enemy.currentFrame], enemy.x - cameraX, enemy.y, soldierSize, soldierSize);
+      if (enemy.inCombat) {
+        ctx.drawImage(EnnemisAttackImages[enemy.attackFrame], enemy.x - cameraX, enemy.y, soldierSize, soldierSize);
+      } else {
+        ctx.drawImage(EnnemisImages[enemy.currentFrame], enemy.x - cameraX, enemy.y, soldierSize, soldierSize);
+      }
     });
   }
 
@@ -136,26 +150,39 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     enemySoldiers.forEach((enemy) => {
+      // Code pour les troupes ennemies
       if (enemy.moving) {
         enemy.x -= soldierSpeed;
         if (frameCount % 5 === 0) {
           enemy.currentFrame = (enemy.currentFrame + 1) % EnnemisFrames;
         }
       }
+
       // Attaque du château lorsque les troupes ennemies atteignent le château
       if (enemy.x <= castleWidth - 100) {
-        leftCastleHP -= 5; // Réduire la santé du château de gauche
+        const castleDamageRate = 0.1; // Taux de dommages par intervalle de temps
+        const castleDamageInterval = 1000; // Intervalle de temps entre chaque réduction de santé du château (en millisecondes)
+
+        // Utiliser setInterval pour réduire progressivement la santé du château
+        const castleDamageTimer = setInterval(() => {
+          leftCastleHP -= castleDamageRate;
+
+          // Vérifier si le château est détruit
+          if (leftCastleHP <= 0) {
+            clearInterval(castleDamageTimer); // Arrêter le timer si le château est détruit
+            leftCastleHP = 0; // S'assurer que la santé du château ne devient pas négative
+          }
+        }, castleDamageInterval);
+
+        // Réinitialiser la position de l'ennemi
         enemy.x = castleWidth - 100;
       }
+
       // Limiter le mouvement des troupes ennemies une fois qu'elles sont au-delà du château ami
       if (enemy.x <= castleWidth - 100) {
         enemy.x = castleWidth - 100;
       }
     });
-
-    // S'assurer que la santé des châteaux ne descende pas en dessous de 0
-    if (leftCastleHP < 0) leftCastleHP = 0;
-    if (rightCastleHP < 0) rightCastleHP = 0;
 
     // Vérifier si le jeu est terminé (victoire/défaite)
     if (leftCastleHP <= 0) {
@@ -187,7 +214,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let allyAttackFrame = 0; // Frame actuelle de l'attaque de l'allié
 
     let allyAttackTimer = setInterval(() => {
-      enemy.hp -= 10;
+      enemy.hp -= 2;
       // Vérifier si l'ennemi est éliminé
       if (enemy.hp <= 0 || ally.hp <= 0) {
         clearInterval(allyAttackTimer);
@@ -207,8 +234,10 @@ document.addEventListener("DOMContentLoaded", function() {
       allyAttackFrame = (allyAttackFrame + 1) % allyAttackFrames; // Passer à la prochaine frame
     }, attackInterval);
 
+    let enemyAttackFrame = 0; // Frame actuelle de l'attaque de l'ennemi
+
     let enemyAttackTimer = setInterval(() => {
-      ally.hp -= 10;
+      ally.hp -= 2;
 
       // Vérifier si l'allié est éliminé
       if (ally.hp <= 0) {
@@ -222,6 +251,9 @@ document.addEventListener("DOMContentLoaded", function() {
         enemy.inCombat = false;
         enemy.moving = true; // La troupe ennemie peut également reprendre son mouvement
       }
+      // Afficher la frame d'attaque de l'ennemi
+      enemy.attackFrame = enemyAttackFrame;
+      enemyAttackFrame = (enemyAttackFrame + 1) % EnnemisAttackFrames; // Passer à la prochaine frame
     }, attackInterval);
     ally.moving = true;
     enemy.moving = true;
