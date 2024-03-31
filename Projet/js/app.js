@@ -46,7 +46,11 @@ document.addEventListener("DOMContentLoaded", function() {
     drawBackground();
   };
 
+
+
   document.getElementById('launchButton').addEventListener('click', function () {
+    var backgroundMusic = document.getElementById('backgroundMusic');
+    backgroundMusic.play().catch(e => console.log('Erreur de lecture de la musique : ', e));
     launchSoldier();
   });
 
