@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   for (let i = EnnemisAttackFrames; i > 0; i--) {
     const img = new Image();
-    img.src = `img/wbg/Attack_E_${i}.png`;
+    img.src = `img/attackE/Attack_E_${i}.png`;
     EnnemisAttackImages.push(img);
   }
 
