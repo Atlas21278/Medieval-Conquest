@@ -23,9 +23,11 @@ document.addEventListener("DOMContentLoaded", function() {
   const EnnemisFrames = 6;
   const allyAttackImages = [];
   const allyAttackFrames = 8;
-  let currentFrame = 0;
+  const castleHealth = 500; // Points de vie initiaux des châteaux
+  let leftCastleHP = castleHealth;
+  let rightCastleHP = castleHealth;
   let frameCount = 0;
-  const frameInterval = 10;
+  let gameInterval;
   let friendlySoldiers = [];
   let enemySoldiers = [];
   let gold = 0;
@@ -54,8 +56,25 @@ document.addEventListener("DOMContentLoaded", function() {
   });
 
   function drawCastles() {
+    // Dessiner les châteaux
     ctx.drawImage(castleLeftImage, -100 - cameraX, canvas.height - castleHeight - 80, castleWidth, castleHeight);
     ctx.drawImage(castleRightImage, levelWidth - castleWidth + 100 - cameraX, canvas.height - castleHeight - 80, castleWidth, castleHeight);
+
+    // Dessiner les barres de vie des châteaux
+    const leftCastleHealthBarWidth = castleWidth * (leftCastleHP / castleHealth);
+    const rightCastleHealthBarWidth = castleWidth * (rightCastleHP / castleHealth);
+
+    // Barre de vie du château de gauche
+    ctx.fillStyle = 'gray';
+    ctx.fillRect(-100 - cameraX, canvas.height - castleHeight - 100, castleWidth, 10);
+    ctx.fillStyle = 'green';
+    ctx.fillRect(-100 - cameraX, canvas.height - castleHeight - 100, leftCastleHealthBarWidth, 10);
+
+    // Barre de vie du château de droite
+    ctx.fillStyle = 'gray';
+    ctx.fillRect(levelWidth - castleWidth + 100 - cameraX, canvas.height - castleHeight - 100, castleWidth, 10);
+    ctx.fillStyle = 'green';
+    ctx.fillRect(levelWidth - castleWidth + 100 - cameraX, canvas.height - castleHeight - 100, rightCastleHealthBarWidth, 10);
   }
 
   for (let i = 1; i <= knightFrames; i++) {
@@ -109,8 +128,9 @@ document.addEventListener("DOMContentLoaded", function() {
           soldier.currentFrame = (soldier.currentFrame + 1) % knightFrames;
         }
       }
-      // Limiter le mouvement des troupes amies une fois qu'elles sont au-delà du château ennemi
+      // Attaque du château ennemi lorsque les troupes amies atteignent le château ennemi
       if (soldier.x + soldierSize >= levelWidth - castleWidth + 100) {
+        rightCastleHP -= 5; // Réduire la santé du château de droite
         soldier.x = levelWidth - castleWidth + 100 - soldierSize;
       }
     });
@@ -122,14 +142,40 @@ document.addEventListener("DOMContentLoaded", function() {
           enemy.currentFrame = (enemy.currentFrame + 1) % EnnemisFrames;
         }
       }
+      // Attaque du château lorsque les troupes ennemies atteignent le château
+      if (enemy.x <= castleWidth - 100) {
+        leftCastleHP -= 5; // Réduire la santé du château de gauche
+        enemy.x = castleWidth - 100;
+      }
       // Limiter le mouvement des troupes ennemies une fois qu'elles sont au-delà du château ami
       if (enemy.x <= castleWidth - 100) {
         enemy.x = castleWidth - 100;
       }
     });
 
-  }
+    // S'assurer que la santé des châteaux ne descende pas en dessous de 0
+    if (leftCastleHP < 0) leftCastleHP = 0;
+    if (rightCastleHP < 0) rightCastleHP = 0;
 
+    // Vérifier si le jeu est terminé (victoire/défaite)
+    if (leftCastleHP <= 0) {
+      // Afficher une fenêtre de défaite pour le château de gauche
+      const playAgain = confirm("Défaite : Le château de gauche a été détruit ! Voulez-vous rejouer ?");
+      if (playAgain) {
+        resetGame();
+      } else {
+        clearInterval(gameInterval);
+      }
+    } else if (rightCastleHP <= 0) {
+      // Afficher une fenêtre de victoire pour le château de droite
+      const playAgain = confirm("Victoire : Le château de droite a survécu ! Voulez-vous rejouer ?");
+      if (playAgain) {
+        resetGame();
+      } else {
+        clearInterval(gameInterval);
+      }
+    }
+  }
 
   function engageCombat(ally, enemy) {
     const attackInterval = 100; // Intervalle de temps entre chaque attaque en millisecondes
@@ -141,6 +187,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let allyAttackFrame = 0; // Frame actuelle de l'attaque de l'allié
 
     let allyAttackTimer = setInterval(() => {
+      enemy.hp -= 10;
       // Vérifier si l'ennemi est éliminé
       if (enemy.hp <= 0 || ally.hp <= 0) {
         clearInterval(allyAttackTimer);
@@ -176,6 +223,8 @@ document.addEventListener("DOMContentLoaded", function() {
         enemy.moving = true; // La troupe ennemie peut également reprendre son mouvement
       }
     }, attackInterval);
+    ally.moving = true;
+    enemy.moving = true;
   }
 
   function checkCollisions() {
@@ -220,7 +269,7 @@ document.addEventListener("DOMContentLoaded", function() {
     goldCounter.textContent = 'Gold: ' + gold;
   }
 
-  setInterval(updateGame, 1000 / 60);
+  gameInterval = setInterval(updateGame, 1000 / 60);
 
   setInterval(() => {
     gold += 10;
@@ -236,4 +285,15 @@ document.addEventListener("DOMContentLoaded", function() {
       gold -= 10;
     }
   });
+
+  function resetGame() {
+    leftCastleHP = castleHealth;
+    rightCastleHP = castleHealth;
+    friendlySoldiers = [];
+    enemySoldiers = [];
+    gold = 0;
+    frameCount = 0;
+    clearInterval(gameInterval);
+    gameInterval = setInterval(updateGame, 1000 / 60);
+  }
 });
