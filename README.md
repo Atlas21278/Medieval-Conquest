@@ -56,6 +56,7 @@ Medieval Conquest offre une aventure palpitante dans un monde médiéval brutal 
 
 ## Points de difficulté du code.
 - L'attaque des troupes à été particulièrement difficile que ça soit pour les troupes ou les chateaux.
+- La gestion de la largeur d'écran à poser beaucoup plus de problèmes que prévu pour le fond ( qui a du être dupliqué), les chateaux (ajuster la position), pour les troupes (au débit les troupes étaient élargi) et pour le déplacement de la caméra (fonctionais sur un pad mac mais pas sur les autres pc)
 
 ## Explication de l'identité graphique:
 
@@ -97,7 +98,7 @@ level VARCHAR(50) NOT NULL
 
   Après avoir lancer le jeu et vous êtes connecté, vous pouvez lancer vos troupes à l'aide du bouton dédié, vous pouvez consulter votre or restant en haut à gauche de l'écran et consulter les différentes barres de vie des chateaux et des différents soldats déployer.
   /!\ Pour déplacer le point de vue utilisez les flèches de votre clavier.
-  Laissez vous emportez par la musique de fond (hi6rn) et bon jeu ! :)
+  Laissez vous emportez par la musique de fond du jeu (hi6rn) et bon jeu ! :)
 
 ### Date :
 
