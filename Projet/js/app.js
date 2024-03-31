@@ -283,6 +283,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   function checkCollisions() {
     friendlySoldiers.forEach((friendlySoldier) => {
+      let hasEnemy = false; // Variable pour vérifier si un ennemi est devant le soldat
       enemySoldiers.forEach((enemySoldier) => {
         // Vérifier si le soldat allié est en collision avec l'ennemi
         if (checkCollision(friendlySoldier, enemySoldier)) {
@@ -296,10 +297,18 @@ document.addEventListener("DOMContentLoaded", function() {
             friendlySoldier.inCombat = true;
             enemySoldier.inCombat = true;
           }
+          hasEnemy = true;
         }
       });
+
+      // Si aucun ennemi n'est détecté devant le soldat, reprendre le mouvement
+      if (!hasEnemy) {
+        friendlySoldier.moving = true;
+        friendlySoldier.inCombat = false;
+      }
     });
   }
+
 
   function checkCollision(obj1, obj2) {
     return obj1.x < obj2.x + soldierSize &&
