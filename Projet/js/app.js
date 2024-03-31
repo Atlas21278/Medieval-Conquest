@@ -366,22 +366,34 @@ document.addEventListener("DOMContentLoaded", function() {
     img.src = `img/attackE/Attack_E_${i}.png`;
     EnnemisAttackImages.push(img);
   }
-
-  // Ajout d'un intervalle pour générer des troupes ennemies
+// Modifier le nombre d'ennemis générés toutes les 5 secondes
   setInterval(() => {
-    enemySoldiers.push({
-      x: levelWidth - castleWidth + 100,
-      y: 450,
-      hp: 100,
-      moving: true,
-      currentFrame: 0,
-      inCombat: false
-    });
-  }, 3000);
+    const randomNumber = Math.random(); // Générer un nombre aléatoire entre 0 et 1
+    if (randomNumber < 0.5 && enemySoldiers.length < 2) { // Générer 2 ennemis si le nombre aléatoire est inférieur à 0.5
+      enemySoldiers.push({
+        x: levelWidth - castleWidth + 100,
+        y: 450,
+        hp: 100,
+        moving: true,
+        currentFrame: 0,
+        inCombat: false
+      });
+    } else if (enemySoldiers.length < 3) { // Générer 3 ennemis si le nombre aléatoire est supérieur ou égal à 0.5
+      enemySoldiers.push({
+        x: levelWidth - castleWidth + 100,
+        y: 450,
+        hp: 100,
+        moving: true,
+        currentFrame: 0,
+        inCombat: false
+      });
+    }
+  }, 5000);
+
 
   // Ajout d'un intervalle pour générer de l'or automatiquement
   setInterval(() => {
-    gold += 10;
+    gold += 5;
   }, 1000);
 
   // Démarrer le jeu
