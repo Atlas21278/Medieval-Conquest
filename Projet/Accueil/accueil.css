@@ -33,6 +33,7 @@ body {
 }
 
 .input-box {
+  position: relative;
   margin: 20px 0;
   width: 100%;
 }
@@ -69,3 +70,30 @@ body {
   background-color: #0056b3; /* Darker blue on hover */
 }
 
+/* Styles for the password rules tooltip */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 220px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -110px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}

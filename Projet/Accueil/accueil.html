@@ -7,11 +7,20 @@
 </head>
 <body>
 <div class="wrapper">
-  <form id="gameForm" action="/submit" method="post">
-    <h1>Medieval-Conquest</h1>
+  <form id="gameForm" action="http://localhost:3000/submit" method="post">
+  <h1>Medieval-Conquest</h1>
     <div class="input-box">
       <input type="text" name="username" placeholder="Username" required>
     </div>
+
+    <div class="input-box tooltip">
+      <input type="password" name="password" id="password" placeholder="Mot de passe" required>
+      <span class="tooltiptext">Votre mot de passe doit contenir au moins 8 caractères, dont une majuscule, une minuscule, un chiffre et un caractère spécial.</span>
+    </div>
+
+
+
+
     <div class="input-box">
       <select name="level" required>
         <option value="easy" selected>Facile</option>
@@ -24,5 +33,6 @@
     </div>
   </form>
 </div>
+<script src="accueil.js"></script>
 </body>
 </html>
