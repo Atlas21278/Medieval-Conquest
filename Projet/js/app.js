@@ -186,7 +186,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 // Attaque du château lorsque les troupes ennemies atteignent le château
       if (enemy.x <= castleWidth - 100 && castleDamageTimer === null) {
-        const castleDamageRate = 10; // Taux de dommages par intervalle de temps
+        const castleDamageRate = 40; // Taux de dommages par intervalle de temps
         const castleDamageInterval = 1000; // Intervalle de temps entre chaque réduction de santé du château (en millisecondes)
 
         // Vérifier si une troupe ennemie est à proximité avant d'attaquer le château
@@ -228,7 +228,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Vérifier si le jeu est terminé (victoire/défaite)
     if (leftCastleHP <= 0) {
-      const playAgain = confirm("Défaite : votre a été détruit... Se venger ?");
+      const playAgain = confirm("Défaite : votre chateau a été détruit... Se venger ?");
       if (playAgain) {
         resetGame();
       } else {
