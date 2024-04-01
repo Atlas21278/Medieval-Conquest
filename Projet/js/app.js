@@ -170,7 +170,7 @@ document.addEventListener("DOMContentLoaded", function() {
       }
       // Attaque du château ennemi lorsque les troupes amies atteignent le château ennemi
       if (soldier.x + soldierSize >= levelWidth - castleWidth + 100) {
-        rightCastleHP -= 11; // Réduire la santé du château de droite
+        rightCastleHP -= 9; // Réduire la santé du château de droite
         soldier.x = levelWidth - castleWidth + 100 - soldierSize;
       }
     });
@@ -184,25 +184,41 @@ document.addEventListener("DOMContentLoaded", function() {
         }
       }
 
-      // Attaque du château lorsque les troupes ennemies atteignent le château
+// Attaque du château lorsque les troupes ennemies atteignent le château
       if (enemy.x <= castleWidth - 100 && castleDamageTimer === null) {
-        const castleDamageRate = 3; // Taux de dommages par intervalle de temps
+        const castleDamageRate = 10; // Taux de dommages par intervalle de temps
         const castleDamageInterval = 1000; // Intervalle de temps entre chaque réduction de santé du château (en millisecondes)
 
-        // Utiliser setInterval pour réduire progressivement la santé du château
-        castleDamageTimer = setInterval(() => {
-          leftCastleHP -= castleDamageRate;
-
-          // Vérifier si le château est détruit
-          if (leftCastleHP <= 0) {
-            clearInterval(castleDamageTimer); // Arrêter le timer si le château est détruit
-            leftCastleHP = 0; // S'assurer que la santé du château ne devient pas négative
+        // Vérifier si une troupe ennemie est à proximité avant d'attaquer le château
+        let enemyNearby = false;
+        enemySoldiers.forEach((enemySoldier) => {
+          if (Math.abs(enemySoldier.x - (castleWidth - 100)) < 100) {
+            enemyNearby = true;
           }
-        }, castleDamageInterval);
+        });
 
-        // Réinitialiser la position de l'ennemi
-        enemy.x = castleWidth - 100;
+        // Si une troupe ennemie est à proximité, réduire la santé du château
+        if (enemyNearby) {
+          // Utiliser setInterval pour réduire progressivement la santé du château
+          castleDamageTimer = setInterval(() => {
+            leftCastleHP -= castleDamageRate;
+
+            // Vérifier si le château est détruit
+            if (leftCastleHP <= 0) {
+              clearInterval(castleDamageTimer); // Arrêter le timer si le château est détruit
+              leftCastleHP = 0; // S'assurer que la santé du château ne devient pas négative
+            }
+          }, castleDamageInterval);
+
+          // Réinitialiser la position de l'ennemi
+          enemy.x = castleWidth - 100;
+        }
+      } else if (enemy.x > castleWidth - 100 && castleDamageTimer !== null) {
+        // Si aucune troupe ennemie n'est à proximité et qu'un timer de dommages est en cours, arrêtez-le
+        clearInterval(castleDamageTimer);
+        castleDamageTimer = null;
       }
+
 
       // Limiter le mouvement des troupes ennemies une fois qu'elles sont au-delà du château ami
       if (enemy.x <= castleWidth - 100) {
@@ -212,15 +228,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Vérifier si le jeu est terminé (victoire/défaite)
     if (leftCastleHP <= 0) {
-      // Afficher une fenêtre de défaite pour le château de gauche
-      const playAgain = confirm("Défaite : votre a été détruit... Voulez-vous rejouer ?");
+      const playAgain = confirm("Défaite : votre a été détruit... Se venger ?");
       if (playAgain) {
         resetGame();
       } else {
         clearInterval(gameInterval);
       }
     } else if (rightCastleHP <= 0) {
-      // Afficher une fenêtre de victoire pour le château de droite
       const playAgain = confirm("Victoire : Le château ennemi à été détruit ! Voulez-vous rejouer ?");
       if (playAgain) {
         resetGame();
@@ -237,8 +251,8 @@ document.addEventListener("DOMContentLoaded", function() {
     ally.inCombat = true;
     enemy.inCombat = true;
 
-    let allyAttackFrame = 0; // Frame actuelle de l'attaque de l'allié
-    let enemyAttackFrame = 0; // Frame actuelle de l'attaque de l'ennemi
+    let allyAttackFrame = 0;
+    let enemyAttackFrame = 0;
 
     let allyAttackTimer = setInterval(() => {
       if (enemy.hp > 0) {
@@ -254,7 +268,7 @@ document.addEventListener("DOMContentLoaded", function() {
         ally.moving = true;
       }
       ally.attackFrame = allyAttackFrame;
-      allyAttackFrame = (allyAttackFrame + 1) % allyAttackFrames; // Passer à la prochaine frame
+      allyAttackFrame = (allyAttackFrame + 1) % allyAttackFrames;
     }, attackInterval);
 
     let enemyAttackTimer = setInterval(() => {
@@ -268,10 +282,10 @@ document.addEventListener("DOMContentLoaded", function() {
           friendlySoldiers.splice(index, 1);
         }
         enemy.inCombat = false;
-        enemy.moving = true; // La troupe ennemie peut également reprendre son mouvement
+        enemy.moving = true;
       }
       enemy.attackFrame = enemyAttackFrame;
-      enemyAttackFrame = (enemyAttackFrame + 1) % EnnemisAttackFrames; // Passer à la prochaine frame
+      enemyAttackFrame = (enemyAttackFrame + 1) % EnnemisAttackFrames;
     }, attackInterval);
 
     ally.moving = true;
